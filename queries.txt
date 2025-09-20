@@ -1,0 +1,62 @@
+-- Query 1: Total Weekly Sales per Store
+-- Calculates the total sales for each store to identify top-performing stores
+SELECT Store, SUM(Weekly_Sales) as Total_Sales
+FROM walmart_sales
+GROUP BY Store
+ORDER BY Total_Sales DESC;
+
+-- Query 2: Average Weekly Sales by Holiday Flag
+-- Compares average sales during holiday (Holiday_Flag = 1) vs. non-holiday weeks
+SELECT Holiday_Flag, ROUND(AVG(Weekly_Sales), 2) as Average_Sales
+FROM walmart_sales
+GROUP BY Holiday_Flag;
+
+-- Query 3: Top 5 Weeks with Highest Sales
+-- Identifies the top 5 weeks with the highest sales across all stores
+SELECT Store, Date, Weekly_Sales
+FROM walmart_sales
+ORDER BY Weekly_Sales DESC
+LIMIT 5;
+
+-- Query 4: Monthly Sales Trend for Store 1 in 2010
+-- Analyzes monthly sales trends for Store 1 in 2010 using the MONTH() function
+SELECT MONTH(Date) as Month, SUM(Weekly_Sales) as Monthly_Sales
+FROM walmart_sales
+WHERE Store = 1 AND YEAR(Date) = 2010
+GROUP BY MONTH(Date)
+ORDER BY Month;
+
+-- Query 5: Sales by Temperature Range for Store 1
+-- Groups sales by temperature ranges to analyze weather impact
+SELECT 
+    CASE 
+        WHEN Temperature < 50 THEN 'Cold (<50°F)'
+        WHEN Temperature BETWEEN 50 AND 70 THEN 'Moderate (50-70°F)'
+        ELSE 'Warm (>70°F)'
+    END as Temperature_Range,
+    SUM(Weekly_Sales) as Total_Sales
+FROM walmart_sales
+WHERE Store = 1
+GROUP BY Temperature_Range
+ORDER BY Total_Sales DESC;
+
+-- Query 6: Join with Hypothetical Store Region Table
+-- Combines sales data with a hypothetical region table to analyze sales by region
+-- Assuming a store_regions table with Store and Region columns
+SELECT w.Store, r.Region, SUM(w.Weekly_Sales) as Total_Sales
+FROM walmart_sales w
+INNER JOIN store_regions r ON w.Store = r.Store
+GROUP BY w.Store, r.Region
+ORDER BY Total_Sales DESC
+LIMIT 10;
+
+-- Query 7: Sales Growth Comparison (Week-over-Week) for Store 1 in 2010
+-- Calculates week-over-week sales growth using LAG function (if supported, else approximate with DATEDIFF)
+SELECT 
+    Date,
+    Weekly_Sales,
+    LAG(Weekly_Sales) OVER (ORDER BY Date) as Previous_Week_Sales,
+    (Weekly_Sales - LAG(Weekly_Sales) OVER (ORDER BY Date)) / LAG(Weekly_Sales) OVER (ORDER BY Date) * 100 as Growth_Percent
+FROM walmart_sales
+WHERE Store = 1 AND YEAR(Date) = 2010
+ORDER BY Date;
